@@ -7,7 +7,7 @@ The Color Bars supported by Q35 are listed below.
 
 ## Color Bar Legend
 
-![Color Bar Example](Images/Colorbars.jpg)
+![Color Bar Example](images/Colorbars.jpg)
 
 | Color | Description | Location where Device State is set  |
 | ---   | --- | --- |

@@ -1,4 +1,4 @@
-# BranchReadme [Name of Branch]
+# BranchReadme \[Name of Branch\]
 
 Describe the goal of your project.
 

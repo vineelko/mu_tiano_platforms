@@ -6,7 +6,7 @@ The Project Mu graphical front page provides access to system information, boot 
 For more information about front page, refer to its documentation -
 [OemPkg - Front Page](https://github.com/microsoft/mu_oem_sample/blob/HEAD/Docs/OemPkg.md).
 
-![Front page in Q35](mu_frontpage.gif)
+![Front page in Q35](images/mu_frontpage.gif)
 
 ## Entering Front Page
 

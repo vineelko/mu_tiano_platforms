@@ -18,13 +18,13 @@ On most Linux distros this requires an extra step for mono and nuget support.
 
 ## Building with Pytools
 
-1. [Optional] Create a Python Virtual Environment - generally once per workspace
+1. \[Optional\] Create a Python Virtual Environment - generally once per workspace
 
     ``` bash
     python -m venv <name of virtual environment>
     ```
 
-2. [Optional] Activate Virtual Environment - each time new shell opened
+2. \[Optional\] Activate Virtual Environment - each time new shell opened
     - Linux
 
       ```bash

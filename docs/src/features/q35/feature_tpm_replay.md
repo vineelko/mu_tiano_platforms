@@ -176,10 +176,10 @@ The examples in this section are meant to illustrate how the process works in pr
 
 #### Example: YAML to Binary and Binary Back to YAML
 
-![tpm_replay_script_example](./Images/tpm_replay_example_yaml_to_binary_and_back.gif)
+![tpm_replay_script_example](./images/tpm_replay_example_yaml_to_binary_and_back.gif)
 *(click the image to enlarge it)*
 
 #### Example: Viewing the Replayed Log in Windows
 
-![tpm_replay_event_log_in_os](./Images/tpm_replay_example_view_event_log_in_windows.gif)
+![tpm_replay_event_log_in_os](./images/tpm_replay_example_view_event_log_in_windows.gif)
 *(click the image to enlarge it)*
