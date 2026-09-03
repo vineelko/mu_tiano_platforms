@@ -3,8 +3,8 @@
 ## Overview
 
 This feature provides the ability to replay TPM measurements from a custom-made event log. The primary purpose is for
-testing operating system features dependent on measurements. This feature allows OS (and FW) developers to easily
-create scenarios like edge cases and bug repros related to measurements from firmware with minimal overhead.
+testing operating system features dependent on measurements. This feature allows OS (and FW) developers to easily create
+scenarios like edge cases and bug repros related to measurements from firmware with minimal overhead.
 
 For more information about the generic TPM replay feature including how it interacts with the TPM, visit the
 [TPM Replay documentation](https://github.com/microsoft/mu_plus/blob/HEAD/TpmTestingPkg/TpmReplayPei/Readme.md).
@@ -29,28 +29,28 @@ Note that the TPM driver stack is also disabled by default in QEMU firmware. It 
 has only been enabled/tested on Linux. The command above also shows how to enable TPM. For more information about
 enabling TPM, refer to the [TPM feature readme document](../common/feature_tpm.md).
 
-> The `# yaml-language-server: $schema=<schemapath>` modeline at the top of the file points to the schema
-> for the TPM Replay event log. Eventually, the schema is planned to be submitted to the
+> The `# yaml-language-server: $schema=<schemapath>` modeline at the top of the file points to the schema for the TPM
+> Replay event log. Eventually, the schema is planned to be submitted to the
 > [JSON Schema Store](https://www.schemastore.org/json/). That is on hold while the final schema materializes.
 >
-> After that happens, popular YAML tools like the [Red Hat YAML extension for VS Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml)
-> will automatically apply the schema. Until then, the file needs to be referenced at the top of the file as shown
-> below to get the benefits of IDE documentation and YAML validation.
+> After that happens, popular YAML tools like the
+> [Red Hat YAML extension for VS Code](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) will
+> automatically apply the schema. Until then, the file needs to be referenced at the top of the file as shown below to
+> get the benefits of IDE documentation and YAML validation.
 >
-> The URL is provided in the example since that will be constant across machines, a local relative (to the YAML file)
-> or absolute path is also acceptable.
+> The URL is provided in the example since that will be constant across machines, a local relative (to the YAML file) or
+> absolute path is also acceptable.
 
 ## Creating a TPM Replay Event Log
 
 Event logs can be created in either a YAML or JSON file.
 
-Here's a quick example of a YAML event log description file. It is intended to show a variety of different keywords
-and options to define event entries.
+Here's a quick example of a YAML event log description file. It is intended to show a variety of different keywords and
+options to define event entries.
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/mu_plus/HEAD/TpmTestingPkg/TpmReplayPei/Tool/TpmReplaySchema.json
 events:
-
   - type: EV_S_CRTM_VERSION
     description: "Descriptions are optional. Hash the UTF-8 string with SHA256 in PCR0."
     pcr: 0
@@ -63,7 +63,8 @@ events:
         Example event data
 
   - type: EV_S_CRTM_VERSION
-    description: "Descriptions are optional. Hash the UTF-16 string with null character data with SHA256 & SHA384 in PCR0."
+    description:
+      "Descriptions are optional. Hash the UTF-16 string with null character data with SHA256 & SHA384 in PCR0."
     pcr: 0
     hash:
       - sha256
@@ -87,7 +88,8 @@ events:
         Data in PCR7 to prevent UEFI var measurements
 
   - type: EV_S_CRTM_VERSION
-    description: "Descriptions are optional. Use a pre-hash SHA256 value. Event data is a UTF-16 string without a null character."
+    description:
+      "Descriptions are optional. Use a pre-hash SHA256 value. Event data is a UTF-16 string without a null character."
     pcr: 0
     prehash:
       sha256: "0xF97326281EABD9A5B64DD757540355165D4BED9A35B13126ED36D3A9F28A10AB"
@@ -144,7 +146,8 @@ The binary can be provided to the firmware three ways:
 - Through a UEFI variable
 - With the [QEMU Firmware Configuration (fw_cfg) Device interface](https://www.qemu.org/docs/master/specs/fw_cfg.html)
 
-More details about these are covered in the ["Input Channels"](https://github.com/microsoft/mu_plus/blob/HEAD/TpmTestingPkg/TpmReplayPei/Readme.md#tcg-event-log-input-channels)
+More details about these are covered in the
+["Input Channels"](https://github.com/microsoft/mu_plus/blob/HEAD/TpmTestingPkg/TpmReplayPei/Readme.md#tcg-event-log-input-channels)
 section of the main TPM Replay feature documentation.
 
 #### FW CFG Example
@@ -176,10 +179,9 @@ The examples in this section are meant to illustrate how the process works in pr
 
 #### Example: YAML to Binary and Binary Back to YAML
 
-![tpm_replay_script_example](./images/tpm_replay_example_yaml_to_binary_and_back.gif)
-*(click the image to enlarge it)*
+![tpm_replay_script_example](./images/tpm_replay_example_yaml_to_binary_and_back.gif) _(click the image to enlarge it)_
 
 #### Example: Viewing the Replayed Log in Windows
 
-![tpm_replay_event_log_in_os](./images/tpm_replay_example_view_event_log_in_windows.gif)
-*(click the image to enlarge it)*
+![tpm_replay_event_log_in_os](./images/tpm_replay_example_view_event_log_in_windows.gif) _(click the image to enlarge it)_
+it)_

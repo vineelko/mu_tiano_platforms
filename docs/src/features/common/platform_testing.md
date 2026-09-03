@@ -1,8 +1,17 @@
 # Platform Package Testing
 
-`PlatformTest.py` is used to compile and execute host based unit tests for tests associated with a platform. In the pre-build phase, host-based unit tests are validated for currency using a straightforward method. This method ensures that any host-based unit test sharing a source file with an INF (Library or Driver) utilized by the platform is also included in the platform's list of host-based unit tests to compile and execute. If a host based unit test is found to be missing, it will stop the build. It should be noted that this is not perfect, as there are tests for protocol interfaces or other miscellaneous scenarios that won't be caught because the source files are not present in the host based unit test's INF.
+`PlatformTest.py` is used to compile and execute host based unit tests for tests associated with a platform. In the
+pre-build phase, host-based unit tests are validated for currency using a straightforward method. This method ensures
+that any host-based unit test sharing a source file with an INF (Library or Driver) utilized by the platform is also
+included in the platform's list of host-based unit tests to compile and execute. If a host based unit test is found to
+be missing, it will stop the build. It should be noted that this is not perfect, as there are tests for protocol
+interfaces or other miscellaneous scenarios that won't be caught because the source files are not present in the host
+based unit test's INF.
 
-This method of compiling and running host-based unit tests is different than the typical method, which is to use `stuart_ci_build` with the target (`-t`) of `NOOPT`. This is to support the pre-build step of validating that the host-based unit test DSC is up to date, and to allow for differences in how code coverage results are created, which will be looked at next.
+This method of compiling and running host-based unit tests is different than the typical method, which is to use
+`stuart_ci_build` with the target (`-t`) of `NOOPT`. This is to support the pre-build step of validating that the
+host-based unit test DSC is up to date, and to allow for differences in how code coverage results are created, which
+will be looked at next.
 
 ## Code Coverage
 
@@ -10,12 +19,12 @@ By default, code coverage is disabled. It is enabled via the command line by add
 with `PlatformTest.py`. Code coverage does require additional tools to be installed, which are verified in a pre-build
 step. The required tools are noted below, per operating system:
 
-* Windows Prerequisite
+- Windows Prerequisite
 
   1. OpenCppCoverage: Download and install <https://github.com/OpenCppCoverage/OpenCppCoverage/releases>
   2. pygount: (if using the --full command) pip install pygount
 
-* Linux Prerequisite
+- Linux Prerequisite
 
   1. lcov: sudo apt-get install -y lcov
   2. lcov_cobertura: pip install lcov_cobertura

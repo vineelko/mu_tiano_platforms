@@ -1,7 +1,7 @@
 # TPM on QEMU Q35
 
-This document describes the TPM 2.0 architecture for the QEMU Q35 platform. Q35 uses a
-direct CRB/FIFO path between firmware and the TPM device.
+This document describes the TPM 2.0 architecture for the QEMU Q35 platform. Q35 uses a direct CRB/FIFO path between
+firmware and the TPM device.
 
 ## Table of Contents
 
@@ -18,19 +18,19 @@ direct CRB/FIFO path between firmware and the TPM device.
 
 ## Requirements
 
-| Requirement | Notes |
-| ------------- | ------- |
-| **Host OS** | Linux (native) or **WSL** on Windows. Native Windows is not supported. |
-| **swtpm** | TPM 2.0 emulator. Install via your distro's package manager (e.g. `apt install swtpm swtpm-tools`). |
-| **QEMU** | Built with `tpm-tis` device support (standard upstream QEMU includes this). |
-| **Build host** | Same Linux/WSL environment used to run `stuart_build` and launch QEMU. |
+| Requirement    | Notes                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **Host OS**    | Linux (native) or **WSL** on Windows. Native Windows is not supported.                              |
+| **swtpm**      | TPM 2.0 emulator. Install via your distro's package manager (e.g. `apt install swtpm swtpm-tools`). |
+| **QEMU**       | Built with `tpm-tis` device support (standard upstream QEMU includes this).                         |
+| **Build host** | Same Linux/WSL environment used to run `stuart_build` and launch QEMU.                              |
 
 See [swtpm Setup](#swtpm-setup) for the full setup commands.
 
 ## Build Configuration
 
-The TPM is disabled by default. To enable it, set `BLD_*_TPM2_ENABLE=TRUE` on the command line or in a
-BuildConfig.conf file placed at the root level of the repo:
+The TPM is disabled by default. To enable it, set `BLD_*_TPM2_ENABLE=TRUE` on the command line or in a BuildConfig.conf
+file placed at the root level of the repo:
 
 ```bash
 stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py --FlashRom BLD_*_TPM2_ENABLE=TRUE
@@ -38,26 +38,24 @@ stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py --FlashRom BLD_*_TPM2_ENAB
 
 The following defines control TPM behavior in `QemuQ35Pkg.dsc`:
 
-| Define | Default | Purpose |
-| -------- | --------- | --------- |
-| `TPM2_ENABLE` | `FALSE` | Master switch. Guards all TPM drivers, libraries, and PCDs. |
-| `TPM_CONFIG_ENABLE` | `FALSE` | Enables `Tcg2ConfigDxe` HII configuration UI. |
+| Define               | Default | Purpose                                                                                            |
+| -------------------- | ------- | -------------------------------------------------------------------------------------------------- |
+| `TPM2_ENABLE`        | `FALSE` | Master switch. Guards all TPM drivers, libraries, and PCDs.                                        |
+| `TPM_CONFIG_ENABLE`  | `FALSE` | Enables `Tcg2ConfigDxe` HII configuration UI.                                                      |
 | `TPM_REPLAY_ENABLED` | `FALSE` | Enables TPM Replay overrides (uses `TpmTestingPkg` variants of Tcg2Dxe and DxeTpm2MeasureBootLib). |
 
 ## Platform Memory Layout
 
 Q35 uses the standard x86 TPM memory-mapped I/O region:
 
-| Region | Address | Size | Interface |
-| -------- | --------- | ------ | ----------- |
+| Region      | Address      | Size            | Interface                  |
+| ----------- | ------------ | --------------- | -------------------------- |
 | TPM TIS/CRB | `0xFED40000` | 0x5000 (20 KiB) | CRB or TIS (auto-detected) |
 
-The firmware communicates directly with the TPM device via MMIO, and QEMU forwards the
-I/O to swtpm over a Unix socket.
+The firmware communicates directly with the TPM device via MMIO, and QEMU forwards the I/O to swtpm over a Unix socket.
 
-The base address comes from the SecurityPkg package declaration default
-(`PcdTpmBaseAddress = 0xFED40000`). The Q35 DSC does not override it explicitly. The
-`Tcg2ConfigPei` driver detects the TPM at this address during PEI.
+The base address comes from the SecurityPkg package declaration default (`PcdTpmBaseAddress = 0xFED40000`). The Q35 DSC
+does not override it explicitly. The `Tcg2ConfigPei` driver detects the TPM at this address during PEI.
 
 ## Architecture Overview
 
@@ -159,8 +157,8 @@ Tpm2DeviceLibDTpm
 Direct MMIO to 0xFED40000
 ```
 
-`Tpm2DeviceLibDTpm` reads the `InterfaceId` register at `PcdTpmBaseAddress + 0x30` to
-determine the interface type. QEMU's `tpm-tis` device presents a TIS/FIFO interface.
+`Tpm2DeviceLibDTpm` reads the `InterfaceId` register at `PcdTpmBaseAddress + 0x30` to determine the interface type.
+QEMU's `tpm-tis` device presents a TIS/FIFO interface.
 
 ### DXE Phase: Router Pattern (`Tpm2DeviceLibRouter`)
 
@@ -177,65 +175,62 @@ Tpm2InstanceLibDTpm (constructor registers with router)
 Direct MMIO to 0xFED40000
 ```
 
-The router pattern exists to support future scenarios where multiple TPM device types
-could coexist. The router accepts only the instance whose `ProviderGuid` matches
-`PcdTpmInstanceGuid`.
+The router pattern exists to support future scenarios where multiple TPM device types could coexist. The router accepts
+only the instance whose `ProviderGuid` matches `PcdTpmInstanceGuid`.
 
 ### Other DXE Drivers: TCG2 Protocol (`Tpm2DeviceLibTcg2`)
 
-Most DXE drivers that need TPM access use `Tpm2DeviceLibTcg2`, which goes through the
-TCG2 Protocol rather than direct MMIO. Only Tcg2Dxe itself uses `Tpm2DeviceLibRouter`
-with direct MMIO.
+Most DXE drivers that need TPM access use `Tpm2DeviceLibTcg2`, which goes through the TCG2 Protocol rather than direct
+MMIO. Only Tcg2Dxe itself uses `Tpm2DeviceLibRouter` with direct MMIO.
 
 ### CRB Register Layout
 
-If the TPM presents a CRB interface (as opposed to TIS/FIFO), the register layout is
-defined by the TCG PC Client Platform TPM Profile (PTP) specification. See:
+If the TPM presents a CRB interface (as opposed to TIS/FIFO), the register layout is defined by the TCG PC Client
+Platform TPM Profile (PTP) specification. See:
 
-- [TCG PC Client Platform TPM Profile (PTP) Specification][ptp-spec] —
-  *Section 6 "Command Response Buffer Interface"* describes `LocalityState`,
-  `LocalityControl`, `InterfaceId`, `CrbControlRequest`, `CrbControlStart`,
+- [TCG PC Client Platform TPM Profile (PTP) Specification][ptp-spec] — _Section 6 "Command Response Buffer Interface"_
+  describes `LocalityState`, `LocalityControl`, `InterfaceId`, `CrbControlRequest`, `CrbControlStart`,
   `CrbControlCommand*`/`CrbControlResponse*`, and the shared `CrbDataBuffer`.
 
-The key register for this platform is `InterfaceId` at `PcdTpmBaseAddress + 0x30`, which
-`Tpm2DeviceLibDTpm` reads to decide between CRB and TIS/FIFO dispatch paths.
+The key register for this platform is `InterfaceId` at `PcdTpmBaseAddress + 0x30`, which `Tpm2DeviceLibDTpm` reads to
+decide between CRB and TIS/FIFO dispatch paths.
 
 ### TIS Register Layout
 
-QEMU's `tpm-tis` device presents a TIS (TPM Interface Specification) / FIFO interface.
-The register layout is defined by:
+QEMU's `tpm-tis` device presents a TIS (TPM Interface Specification) / FIFO interface. The register layout is defined
+by:
 
-- [TCG PC Client Specific TPM Interface Specification (TIS)][tis-spec] —
-  defines `Access`, `IntEnable`/`IntVector`, `STS` (with `commandReady`, `tpmGo`,
-  `dataAvail`, `burstCount`), `DataFifo`, and the `Vid`/`Did`/`Rid` identification
+- [TCG PC Client Specific TPM Interface Specification (TIS)][tis-spec] — defines `Access`, `IntEnable`/`IntVector`,
+  `STS` (with `commandReady`, `tpmGo`, `dataAvail`, `burstCount`), `DataFifo`, and the `Vid`/`Did`/`Rid` identification
   registers.
 
-The TIS flow uses `BurstCount` from the STS register to pace reads and writes through
-the `DataFifo` register, one burst at a time.
+The TIS flow uses `BurstCount` from the STS register to pace reads and writes through the `DataFifo` register, one burst
+at a time.
 
 [ptp-spec]: https://trustedcomputinggroup.org/resource/pc-client-platform-tpm-profile-ptp-specification/
-[tis-spec]: https://trustedcomputinggroup.org/resource/pc-client-work-group-pc-client-specific-tpm-interface-specification-tis/
+[tis-spec]:
+  https://trustedcomputinggroup.org/resource/pc-client-work-group-pc-client-specific-tpm-interface-specification-tis/
 
 ## Hash Library Architecture
 
-Tcg2Dxe uses `HashLibBaseCryptoRouterDxe` while Tcg2Pei uses `HashLibBaseCryptoRouterPei`
-with all hash instance libraries included.
+Tcg2Dxe uses `HashLibBaseCryptoRouterDxe` while Tcg2Pei uses `HashLibBaseCryptoRouterPei` with all hash instance
+libraries included.
 
 ### Registration Flow
 
 1. `HashLibBaseCryptoRouterConstructor` resets `PcdTcg2HashAlgorithmBitmap` to 0.
 2. Each `HashInstanceLib` constructor calls `RegisterHashInterfaceLib()`.
-3. `RegisterHashInterfaceLib()` checks the algorithm against `PcdTpm2HashMask` (`0x02` =
-   SHA256 only). Algorithms not in the mask return `EFI_UNSUPPORTED`.
+3. `RegisterHashInterfaceLib()` checks the algorithm against `PcdTpm2HashMask` (`0x02` = SHA256 only). Algorithms not in
+   the mask return `EFI_UNSUPPORTED`.
 
 ### Hash Algorithm Bitmask Values
 
 The bit positions used in `PcdTpm2HashMask`, `PcdTcg2HashAlgorithmBitmap`, and the
-`EFI_TCG2_BOOT_SERVICE_CAPABILITY.HashAlgorithmBitmap` field are defined by the EFI
-TCG2 protocol and the TCG algorithm registry:
+`EFI_TCG2_BOOT_SERVICE_CAPABILITY.HashAlgorithmBitmap` field are defined by the EFI TCG2 protocol and the TCG algorithm
+registry:
 
-- [UEFI TCG2 Protocol Specification][tcg2-proto] — see `EFI_TCG2_BOOT_HASH_ALG_*`
-  (`SHA1` = BIT0, `SHA256` = BIT1, `SHA384` = BIT2, `SHA512` = BIT3, `SM3_256` = BIT4).
+- [UEFI TCG2 Protocol Specification][tcg2-proto] — see `EFI_TCG2_BOOT_HASH_ALG_*` (`SHA1` = BIT0, `SHA256` = BIT1,
+  `SHA384` = BIT2, `SHA512` = BIT3, `SM3_256` = BIT4).
 - [TCG Algorithm Registry][tcg-algreg] — canonical list of TPM hash algorithm IDs.
 
 For this platform, `PcdTpm2HashMask = 0x02` enables SHA256 only.
@@ -265,23 +260,21 @@ Final ActivePcrBanks / HashAlgorithmBitmap in EFI_TCG2_BOOT_SERVICE_CAPABILITY
 
 ### Library Selection
 
-| `TPM2_ENABLE` | Library | Behavior |
-| -------------- | --------- | ---------- |
-| `FALSE` | `Tcg2PhysicalPresenceLibNull` | All functions stubbed |
-| `TRUE` | `DxeTcg2PhysicalPresenceMinimumLib` | Auto-confirms Clear; rejects all other operations |
+| `TPM2_ENABLE` | Library                             | Behavior                                          |
+| ------------- | ----------------------------------- | ------------------------------------------------- |
+| `FALSE`       | `Tcg2PhysicalPresenceLibNull`       | All functions stubbed                             |
+| `TRUE`        | `DxeTcg2PhysicalPresenceMinimumLib` | Auto-confirms Clear; rejects all other operations |
 
 The MinimumLib implementation:
 
 - **Auto-confirms** TPM Clear operations without user prompting.
-- **Rejects** SET_PCR_BANKS, LOG_ALL_DIGESTS, and other operations with
-  `TCG_PP_RETURN_TPM_OPERATION_RESPONSE_FAILURE`.
+- **Rejects** SET_PCR_BANKS, LOG_ALL_DIGESTS, and other operations with `TCG_PP_RETURN_TPM_OPERATION_RESPONSE_FAILURE`.
 - Does **not** create or use `TCG2_PHYSICAL_PRESENCE_FLAGS_VARIABLE`.
 
 ### ProcessRequest in BDS
 
-`Tcg2PhysicalPresenceLibProcessRequest()` is invoked from the platform's
-`DeviceBootManagerLib` during `DeviceBootManagerAfterConsole()`, before the shell
-launches. It:
+`Tcg2PhysicalPresenceLibProcessRequest()` is invoked from the platform's `DeviceBootManagerLib` during
+`DeviceBootManagerAfterConsole()`, before the shell launches. It:
 
 1. Reads the `Tcg2PhysicalPresence` NV variable (creates it if missing).
 2. Executes any pending PP request stored in the variable.
@@ -291,9 +284,8 @@ launches. It:
 
 ### Installation
 
-swtpm requires Unix sockets, so it must run in a Linux environment. On Windows,
-use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows
-Subsystem for Linux).
+swtpm requires Unix sockets, so it must run in a Linux environment. On Windows, use
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux).
 
 ```bash
 # Windows (from a WSL terminal)
@@ -322,9 +314,8 @@ swtpm socket \
 
 ### Automatic Setup (QemuRunner)
 
-When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` automatically starts swtpm as a subprocess before
-launching QEMU. The swtpm state directory is set to `BUILD_OUTPUT_BASE` and the Unix socket
-is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`:
+When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` automatically starts swtpm as a subprocess before launching QEMU. The swtpm
+state directory is set to `BUILD_OUTPUT_BASE` and the Unix socket is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`:
 
 ```python
 # Platforms/QemuQ35Pkg/Plugins/QemuRunner/QemuRunner.py
@@ -341,10 +332,9 @@ def StartSwTpm(tpm_dir, tpm_sock):
     return subprocess.Popen(cmd)
 ```
 
-swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the
-Unix socket to appear before starting QEMU, and terminates the swtpm process so it doesn't
-outlive the run. SWTPM is enabled by default. Disable it by setting `SWTPM_ENABLE=FALSE` on
-the command line or in the BuildConfig.conf file.
+swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the Unix socket to appear before
+starting QEMU, and terminates the swtpm process so it doesn't outlive the run. SWTPM is enabled by default. Disable it
+by setting `SWTPM_ENABLE=FALSE` on the command line or in the BuildConfig.conf file.
 
 ```admonish note
 SWTPM is only available on Linux builds. `QemuRunner` automatically disables it on Windows
@@ -353,8 +343,8 @@ hosts even if `SWTPM_ENABLE=TRUE`.
 
 ### QEMU Arguments
 
-When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command line
-(with the socket path under `BUILD_OUTPUT_BASE`):
+When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command line (with the socket path under
+`BUILD_OUTPUT_BASE`):
 
 ```text
 -chardev socket,id=chrtpm,path={BUILD_OUTPUT_BASE}/swtpm-sock
@@ -362,8 +352,8 @@ When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command
 -device tpm-tis,tpmdev=tpm0
 ```
 
-The `-device tpm-tis` argument is Q35-specific — it attaches a TIS-compatible TPM device
-to the Q35 chipset at the standard address `0xFED40000`.
+The `-device tpm-tis` argument is Q35-specific — it attaches a TIS-compatible TPM device to the Q35 chipset at the
+standard address `0xFED40000`.
 
 ## Communication Flow
 
@@ -406,26 +396,26 @@ QEMU tpm-tis device ──── Unix socket ──── swtpm process
 
 ### Required PCDs (set when TPM2_ENABLE=TRUE)
 
-| PCD | Value | Type | Purpose |
-| ----- | ------- | ------ | --------- |
-| `PcdTpmBaseAddress` | `0xFED40000` (package default) | DynamicDefault | TPM TIS/CRB MMIO base address |
-| `PcdTpm2HashMask` | `0x02` | DynamicDefault | Hash algorithm filter (SHA256 only) |
-| `PcdTpmInstanceGuid` | `gEfiTpmDeviceInstanceTpm20DtpmGuid` | DynamicDefault | Selects discrete TPM 2.0 device type (set by Tcg2ConfigPei at runtime) |
-| `PcdTpm2AcpiTableRev` | `4` | DynamicHii | ACPI TPM2 table revision |
-| `PcdUserPhysicalPresence` | `FALSE` | FixedAtBuild | No physical user presence assertion |
+| PCD                       | Value                                | Type           | Purpose                                                                |
+| ------------------------- | ------------------------------------ | -------------- | ---------------------------------------------------------------------- |
+| `PcdTpmBaseAddress`       | `0xFED40000` (package default)       | DynamicDefault | TPM TIS/CRB MMIO base address                                          |
+| `PcdTpm2HashMask`         | `0x02`                               | DynamicDefault | Hash algorithm filter (SHA256 only)                                    |
+| `PcdTpmInstanceGuid`      | `gEfiTpmDeviceInstanceTpm20DtpmGuid` | DynamicDefault | Selects discrete TPM 2.0 device type (set by Tcg2ConfigPei at runtime) |
+| `PcdTpm2AcpiTableRev`     | `4`                                  | DynamicHii     | ACPI TPM2 table revision                                               |
+| `PcdUserPhysicalPresence` | `FALSE`                              | FixedAtBuild   | No physical user presence assertion                                    |
 
 ### Memory Type PCDs
 
-| PCD | Value (pages) | Purpose |
-| ----- | --------------- | --------- |
-| `PcdMemoryTypeEfiACPIReclaimMemory` | `0x2B` (43) | Includes TPM ACPI tables |
-| `PcdMemoryTypeEfiACPIMemoryNVS` | `0x80` (128) | ACPI NVS memory |
-| `PcdMemoryTypeEfiReservedMemoryType` | `0x510` | Reserved memory |
-| `PcdMemoryTypeEfiRuntimeServicesCode` | `0x100` | Runtime code |
-| `PcdMemoryTypeEfiRuntimeServicesData` | `0x700` | Runtime data |
+| PCD                                   | Value (pages) | Purpose                  |
+| ------------------------------------- | ------------- | ------------------------ |
+| `PcdMemoryTypeEfiACPIReclaimMemory`   | `0x2B` (43)   | Includes TPM ACPI tables |
+| `PcdMemoryTypeEfiACPIMemoryNVS`       | `0x80` (128)  | ACPI NVS memory          |
+| `PcdMemoryTypeEfiReservedMemoryType`  | `0x510`       | Reserved memory          |
+| `PcdMemoryTypeEfiRuntimeServicesCode` | `0x100`       | Runtime code             |
+| `PcdMemoryTypeEfiRuntimeServicesData` | `0x700`       | Runtime data             |
 
 ### Conditional PCDs (TPM_CONFIG_ENABLE=TRUE)
 
-| PCD | Value | Purpose |
-| ----- | ------- | --------- |
+| PCD                                  | Value   | Purpose                                      |
+| ------------------------------------ | ------- | -------------------------------------------- |
 | `PcdTcgPhysicalPresenceInterfaceVer` | `"1.3"` | TCG PPI specification version reported to OS |

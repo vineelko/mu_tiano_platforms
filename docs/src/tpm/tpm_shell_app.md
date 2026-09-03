@@ -25,13 +25,12 @@ INF SecurityPkg/Applications/TpmShellApp/TpmShellApp.inf
 
 ## Protocol Availability
 
-The `EFI_TCG2_PROTOCOL` is installed by `Tcg2Dxe.efi`, which only loads when
-`TPM2_ENABLE=TRUE`.
+The `EFI_TCG2_PROTOCOL` is installed by `Tcg2Dxe.efi`, which only loads when `TPM2_ENABLE=TRUE`.
 
 ## Running on QEMU Arm Virt
 
-On QEMU Arm Virt, the TpmShellApp is placed directly in the firmware volume, which is mapped as an
-`FSx:` device in the UEFI shell. Build with:
+On QEMU Arm Virt, the TpmShellApp is placed directly in the firmware volume, which is mapped as an `FSx:` device in the
+UEFI shell. Build with:
 
 ```bash
 stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --FlashRom BLD_*_TPM2_ENABLE=TRUE
@@ -56,9 +55,8 @@ FS0:\> TpmShellApp.efi info
 
 ## Running on QEMU Q35
 
-On Q35, shell applications are loaded from a virtual drive (FAT filesystem image), not
-directly from the firmware volume. The `FILE_REGEX` build parameter controls which
-binaries are copied to the virtual drive:
+On Q35, shell applications are loaded from a virtual drive (FAT filesystem image), not directly from the firmware
+volume. The `FILE_REGEX` build parameter controls which binaries are copied to the virtual drive:
 
 ```bash
 stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py --FlashRom \
@@ -66,8 +64,7 @@ stuart_build -c Platforms/QemuQ35Pkg/PlatformBuild.py --FlashRom \
   FILE_REGEX=TpmShellApp.efi
 ```
 
-At the UEFI shell, find the virtual drive's FS mapping (typically backed by a PCI device,
-not `Fv(...)`) and run:
+At the UEFI shell, find the virtual drive's FS mapping (typically backed by a PCI device, not `Fv(...)`) and run:
 
 ```text
 Shell> map -r
@@ -84,21 +81,19 @@ FS0:\> dir
 
 ## Hash Algorithm Configuration
 
-Both QEMU platforms set `PcdTpm2HashMask` to `0x02` (SHA256 only). This means the app
-will typically only see SHA256 as supported and active, even though swtpm may support all
-five algorithms. To see additional algorithms, update `PcdTpm2HashMask` in the platform
-DSC.
+Both QEMU platforms set `PcdTpm2HashMask` to `0x02` (SHA256 only). This means the app will typically only see SHA256 as
+supported and active, even though swtpm may support all five algorithms. To see additional algorithms, update
+`PcdTpm2HashMask` in the platform DSC.
 
 ## Expected Behavior with MinimumLib
 
-Both QEMU platforms use `DxeTcg2PhysicalPresenceMinimumLib` when TPM is enabled. This
-library has specific behaviors that affect TpmShellApp results:
+Both QEMU platforms use `DxeTcg2PhysicalPresenceMinimumLib` when TPM is enabled. This library has specific behaviors
+that affect TpmShellApp results:
 
 ### `setpcr` with Already-Active Banks
 
-When the requested banks match the currently active banks, `Tcg2Dxe` sends
-`TCG2_PHYSICAL_PRESENCE_NO_ACTION` to the PP library. MinimumLib processes `NO_ACTION`
-successfully, returning `EFI_SUCCESS`.
+When the requested banks match the currently active banks, `Tcg2Dxe` sends `TCG2_PHYSICAL_PRESENCE_NO_ACTION` to the PP
+library. MinimumLib processes `NO_ACTION` successfully, returning `EFI_SUCCESS`.
 
 ```text
 Shell> TpmShellApp setpcr 0x2    (SHA256 already active)
@@ -109,9 +104,8 @@ Request submitted. Changes will take effect after reboot.
 
 ### `setpcr` with Different Banks
 
-When the requested banks differ from active banks, `Tcg2Dxe` sends
-`TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS` to the PP library. MinimumLib rejects this
-operation as it only supports Clear operations.
+When the requested banks differ from active banks, `Tcg2Dxe` sends `TCG2_PHYSICAL_PRESENCE_SET_PCR_BANKS` to the PP
+library. MinimumLib rejects this operation as it only supports Clear operations.
 
 ```text
 Shell> TpmShellApp setpcr 0x4    (SHA384, not currently active)
@@ -120,21 +114,18 @@ Status: Unsupported
 SetActivePcrBanks failed.
 ```
 
-This is **expected and correct behavior** — MinimumLib is designed to block PCR bank
-changes.
+This is **expected and correct behavior** — MinimumLib is designed to block PCR bank changes.
 
 ### `logall` Expected Behavior
 
-If the platform only has SHA256 registered (default), `logall` requests the same bank
-that's already active, resulting in a `NO_ACTION` → `EFI_SUCCESS`. If additional
-algorithms were registered, it would request banks different from the active set,
-triggering a `SET_PCR_BANKS` rejection.
+If the platform only has SHA256 registered (default), `logall` requests the same bank that's already active, resulting
+in a `NO_ACTION` → `EFI_SUCCESS`. If additional algorithms were registered, it would request banks different from the
+active set, triggering a `SET_PCR_BANKS` rejection.
 
 ### `lastresponse` Expected Behavior
 
-Reports the result stored in the `Tcg2PhysicalPresence` NV variable by
-`ProcessRequest`. If no prior `SetActivePcrBanks` was processed through a reboot cycle,
-the response will show no operation present.
+Reports the result stored in the `Tcg2PhysicalPresence` NV variable by `ProcessRequest`. If no prior `SetActivePcrBanks`
+was processed through a reboot cycle, the response will show no operation present.
 
 ```text
 Shell> TpmShellApp lastresponse
@@ -146,8 +137,8 @@ Shell> TpmShellApp lastresponse
 
 ### `eventlog` on QEMU
 
-The `eventlog` command dumps the crypto-agile TCG2 event log. On QEMU with the default
-SHA256-only configuration, each event contains a single SHA256 digest.
+The `eventlog` command dumps the crypto-agile TCG2 event log. On QEMU with the default SHA256-only configuration, each
+event contains a single SHA256 digest.
 
 ```text
 Shell> TpmShellApp.efi eventlog
@@ -167,14 +158,13 @@ Event 2: PCR 0 EV_EFI_PLATFORM_FIRMWARE_BLOB (0x80000008)
 Total: N event(s)
 ```
 
-If `PcdTpm2HashMask` is updated to enable additional algorithms (e.g., `0x06` for
-SHA256 + SHA384), each event will contain multiple digests — one per active algorithm.
+If `PcdTpm2HashMask` is updated to enable additional algorithms (e.g., `0x06` for SHA256 + SHA384), each event will
+contain multiple digests — one per active algorithm.
 
 ### `replay` on QEMU
 
-The `replay` command replays extend operations from the event log to compute expected
-PCR values, then reads the actual PCR values from the TPM via `SubmitCommand` and
-compares them.
+The `replay` command replays extend operations from the event log to compute expected PCR values, then reads the actual
+PCR values from the TPM via `SubmitCommand` and compares them.
 
 ```text
 Shell> TpmShellApp.efi replay
@@ -197,15 +187,13 @@ PCR 1:
 Summary: M PCR bank(s) verified, M PASS, 0 FAIL
 ```
 
-On a freshly booted QEMU platform with swtpm, all PCRs should show `PASS`. A `FAIL`
-indicates that either the event log is incomplete (e.g., truncated) or an extend
-operation occurred outside the logged event flow.
+On a freshly booted QEMU platform with swtpm, all PCRs should show `PASS`. A `FAIL` indicates that either the event log
+is incomplete (e.g., truncated) or an extend operation occurred outside the logged event flow.
 
 ### Replay with Multiple Algorithms
 
-When multiple hash algorithms are active, the replay verifies each algorithm
-independently. Algorithms not supported by `BaseCryptLib` (e.g., SM3_256) are skipped
-with a message:
+When multiple hash algorithms are active, the replay verifies each algorithm independently. Algorithms not supported by
+`BaseCryptLib` (e.g., SM3_256) are skipped with a message:
 
 ```text
 PCR 0:
@@ -217,15 +205,13 @@ PCR 0:
 
 ### Truncated Event Log
 
-If the firmware's event log buffer was exhausted, the `eventlog` and `replay` commands
-print a warning:
+If the firmware's event log buffer was exhausted, the `eventlog` and `replay` commands print a warning:
 
 ```text
 Warning: Event log was truncated.
 ```
 
-For `replay`, a truncated log means the replayed PCR values will not include all
-extensions, so mismatches are expected.
+For `replay`, a truncated log means the replayed PCR values will not include all extensions, so mismatches are expected.
 
 ## Findings
 
@@ -247,11 +233,11 @@ Example:
 - SHA384 support is removed from `Tcg2Pei` and `Tcg2Dxe`.
 - Build/Run the Q35 platform.
 - TPM reports SHA256 as the only active PCR bank.
-- `Tcg2Pei` recognizes there is a mismatch between platform support (i.e. `Tpm2HashMask`)
-  and TPM active banks. It activates SHA384 and triggers a `ResetCold`.
+- `Tcg2Pei` recognizes there is a mismatch between platform support (i.e. `Tpm2HashMask`) and TPM active banks. It
+  activates SHA384 and triggers a `ResetCold`.
 - TPM reports SHA256 + SHA384 as active PCR banks.
-- `HashLibBaseCryptoRouterPei` and `HashLibBaseCryptoRouterDxe` set
-  `PcdTcg2HashAlgorithmBitmap` based on successfully registered hash algorithms.
+- `HashLibBaseCryptoRouterPei` and `HashLibBaseCryptoRouterDxe` set `PcdTcg2HashAlgorithmBitmap` based on successfully
+  registered hash algorithms.
 - `Tcg2Pei` registers SHA256 but is unable to register SHA384.
 - `Tcg2Dxe` registers SHA256 but is unable to register SHA384.
 - `Tcg2Dxe` sets local variables based on what the TPM reports and `PcdTcg2HashAlgorithmBitmap`.

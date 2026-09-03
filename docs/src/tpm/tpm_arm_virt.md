@@ -1,8 +1,7 @@
 # TPM on QEMU Arm Virt
 
-This document describes the TPM 2.0 architecture for the QEMU Arm Virt platform. Arm Virt uses
-a dual-CRB design with an FF-A (Firmware Framework for Arm A-Profile) mediated communication
-path between the normal world and the secure world.
+This document describes the TPM 2.0 architecture for the QEMU Arm Virt platform. Arm Virt uses a dual-CRB design with an
+FF-A (Firmware Framework for Arm A-Profile) mediated communication path between the normal world and the secure world.
 
 ## Table of Contents
 
@@ -22,19 +21,19 @@ path between the normal world and the secure world.
 
 ## Requirements
 
-| Requirement | Notes |
-| ------------- | ------- |
-| **Host OS** | Linux (native) or **WSL** on Windows. Native Windows is not supported. |
-| **swtpm** | TPM 2.0 emulator. Install via your distro's package manager (e.g. `apt install swtpm swtpm-tools`). |
-| **QEMU** | Built with `tpm-tis-device` support (standard upstream QEMU includes this). |
-| **Build host** | Same Linux/WSL environment used to run `stuart_build` and launch QEMU. |
+| Requirement    | Notes                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **Host OS**    | Linux (native) or **WSL** on Windows. Native Windows is not supported.                              |
+| **swtpm**      | TPM 2.0 emulator. Install via your distro's package manager (e.g. `apt install swtpm swtpm-tools`). |
+| **QEMU**       | Built with `tpm-tis-device` support (standard upstream QEMU includes this).                         |
+| **Build host** | Same Linux/WSL environment used to run `stuart_build` and launch QEMU.                              |
 
 See [swtpm Setup](#swtpm-setup) for the full setup commands.
 
 ## Build Configuration
 
-The TPM is disabled by default. To enable it, set `BLD_*_TPM2_ENABLE=TRUE` on the command line or in a
-BuildConfig.conf file placed at the root level of the repo:
+The TPM is disabled by default. To enable it, set `BLD_*_TPM2_ENABLE=TRUE` on the command line or in a BuildConfig.conf
+file placed at the root level of the repo:
 
 ```bash
 stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --FlashRom BLD_*_TPM2_ENABLE=TRUE
@@ -42,29 +41,30 @@ stuart_build -c Platforms/QemuArmVirtPkg/PlatformBuild.py --FlashRom BLD_*_TPM2_
 
 The following defines control TPM behavior in `QemuArmVirtPkg.dsc`:
 
-| Define | Default | Purpose |
-| -------- | --------- | --------- |
-| `TPM2_ENABLE` | `FALSE` | Master switch. Guards all TPM drivers, libraries, and PCDs. |
-| `TPM2_CONFIG_ENABLE` | `FALSE` | Enables `Tcg2ConfigDxe` HII configuration UI. |
+| Define               | Default | Purpose                                                     |
+| -------------------- | ------- | ----------------------------------------------------------- |
+| `TPM2_ENABLE`        | `FALSE` | Master switch. Guards all TPM drivers, libraries, and PCDs. |
+| `TPM2_CONFIG_ENABLE` | `FALSE` | Enables `Tcg2ConfigDxe` HII configuration UI.               |
 
-When `TPM2_ENABLE=TRUE`, the build additionally passes `-DTPM2_ENABLE` to the C compiler
-via build options, allowing C code to use `#ifdef TPM2_ENABLE` guards.
+When `TPM2_ENABLE=TRUE`, the build additionally passes `-DTPM2_ENABLE` to the C compiler via build options, allowing C
+code to use `#ifdef TPM2_ENABLE` guards.
 
 ## Platform Memory Layout
 
 The Arm Virt platform defines two distinct TPM memory regions:
 
-| Region | Address | Size | Visibility |
-| -------- | --------- | ------ | ------------ |
+| Region       | Address      | Size       | Visibility                  |
+| ------------ | ------------ | ---------- | --------------------------- |
 | Internal CRB | `0x40200000` | 0x10 pages | Normal world + Secure world |
-| External CRB | `0x0c000000` | 0x10 pages | Secure world only |
+| External CRB | `0x0c000000` | 0x10 pages | Secure world only           |
 
 The Internal CRB address is published via PCDs:
 
 - `PcdTpmBaseAddress` = `0x40200000`
 - `PcdTpmMaxAddress` = `0x40204FFF` (5 localities × 0x1000)
 
-The Internal CRB is marked as `EfiACPIMemoryNVS` via a HOB in [ArmPlatformLibQemu.c](https://github.com/microsoft/mu_tiano_platforms/blob/main/Platforms/QemuArmVirtPkg/Library/ArmPlatformLibQemu/ArmPlatformLibQemu.c)
+The Internal CRB is marked as `EfiACPIMemoryNVS` via a HOB in
+[ArmPlatformLibQemu.c](https://github.com/microsoft/mu_tiano_platforms/blob/main/Platforms/QemuArmVirtPkg/Library/ArmPlatformLibQemu/ArmPlatformLibQemu.c)
 so the OS can locate it through the ACPI TPM2 table.
 
 ## Architecture Overview
@@ -170,14 +170,14 @@ Two FF-A Secure Partitions are involved in TPM operations.
 
 Configured in `Platforms/QemuArmVirtPkg/fdts/qemu_virt_mssp_rust_config.dts`:
 
-| Property | Value |
-| ---------- | ------- |
-| Partition ID | `0x8002` |
-| Exception Level | SEL1 |
-| Execution State | AARCH64 |
-| Load Address | `0x0e700000` |
-| Image Size | 4 MiB |
-| Boot Order | 2 |
+| Property        | Value        |
+| --------------- | ------------ |
+| Partition ID    | `0x8002`     |
+| Exception Level | SEL1         |
+| Execution State | AARCH64      |
+| Load Address    | `0x0e700000` |
+| Image Size      | 4 MiB        |
+| Boot Order      | 2            |
 
 The MSSP hosts the TPM service and is granted access to both CRB regions:
 
@@ -204,69 +204,61 @@ The MSSP publishes three service UUIDs. The TPM service UUID is:
 
 Key libraries running inside the MSSP:
 
-- **TpmServiceLib** — handles incoming FF-A messages, implements the CRB state machine
-  (IDLE → cmdReady → READY → start → COMPLETE → goIdle → IDLE). Note that this service is
-  based on the CRB over FF-A specification released by ARM. See:
+- **TpmServiceLib** — handles incoming FF-A messages, implements the CRB state machine (IDLE → cmdReady → READY → start
+  → COMPLETE → goIdle → IDLE). Note that this service is based on the CRB over FF-A specification released by ARM. See:
   [TPM Service Command Response Buffer Interface Over FF-A](https://developer.arm.com/documentation/den0138/latest/)
-- **TpmServiceStateTranslationLib** — translates between the Internal CRB (CRB interface)
-  and the External CRB (which may be CRB or FIFO depending on QEMU configuration). On
-  QEMU Arm Virt the external interface is FIFO.
+- **TpmServiceStateTranslationLib** — translates between the Internal CRB (CRB interface) and the External CRB (which
+  may be CRB or FIFO depending on QEMU configuration). On QEMU Arm Virt the external interface is FIFO.
 
 ### StMM — Standalone MM Partition (id=0x8001)
 
 Configured in `Platforms/QemuArmVirtPkg/fdts/qemu_virt_stmm_config.dts`:
 
-| Property | Value |
-| ---------- | ------- |
-| Partition ID | `0x8001` |
-| Exception Level | SEL0 |
-| Execution State | AARCH64 |
-| Load Address | `0x0e400000` |
-| Image Size | 3 MiB |
-| Boot Order | 0 |
+| Property        | Value        |
+| --------------- | ------------ |
+| Partition ID    | `0x8001`     |
+| Exception Level | SEL0         |
+| Execution State | AARCH64      |
+| Load Address    | `0x0e400000` |
+| Image Size      | 3 MiB        |
+| Boot Order      | 0            |
 
-The StMM partition hosts secure variable storage (FTW, VariableRuntimeDxe), and the
-`Tcg2StandaloneMmArm` driver which processes Physical Presence Interface commands from
-the normal world for NV variable access.
+The StMM partition hosts secure variable storage (FTW, VariableRuntimeDxe), and the `Tcg2StandaloneMmArm` driver which
+processes Physical Presence Interface commands from the normal world for NV variable access.
 
 ## CRB Regions
 
 ### CRB Register Layout (PTP CRB Interface)
 
-Each locality occupies 0x1000 bytes. The CRB register layout is defined by the TCG
-PC Client Platform TPM Profile (PTP) specification (and mirrored in `TpmPtp.h`):
+Each locality occupies 0x1000 bytes. The CRB register layout is defined by the TCG PC Client Platform TPM Profile (PTP)
+specification (and mirrored in `TpmPtp.h`):
 
-- [TCG PC Client Platform TPM Profile (PTP) Specification][ptp-spec] —
-  *Section 6 "Command Response Buffer Interface"* describes `LocalityState`,
-  `LocalityControl`, `InterfaceId`, `CrbControlRequest`, `CrbControlStart`,
+- [TCG PC Client Platform TPM Profile (PTP) Specification][ptp-spec] — _Section 6 "Command Response Buffer Interface"_
+  describes `LocalityState`, `LocalityControl`, `InterfaceId`, `CrbControlRequest`, `CrbControlStart`,
   `CrbControlCommand*`/`CrbControlResponse*`, and the shared `CrbDataBuffer`.
 
 [ptp-spec]: https://trustedcomputinggroup.org/resource/pc-client-platform-tpm-profile-ptp-specification/
 
 ### Internal CRB (`0x40200000`)
 
-This is the CRB visible to normal-world firmware (DXE drivers and UEFI applications).
-`Tpm2DeviceLibFfa` writes TPM commands into this CRB's data buffer and reads responses
-from it. The Internal CRB uses the standard CRB register interface. It is the TPM
-service's responsibility to set up and maintain this region. The goal is for this region
-to mimic a normal MMIO CRB region, with the added caveat that an FF-A message must be sent
-for any register modification to take effect.
+This is the CRB visible to normal-world firmware (DXE drivers and UEFI applications). `Tpm2DeviceLibFfa` writes TPM
+commands into this CRB's data buffer and reads responses from it. The Internal CRB uses the standard CRB register
+interface. It is the TPM service's responsibility to set up and maintain this region. The goal is for this region to
+mimic a normal MMIO CRB region, with the added caveat that an FF-A message must be sent for any register modification to
+take effect.
 
-The normal-world code performs MMIO writes to the CRB control registers (cmdReady, Start,
-goIdle) and then sends FF-A messages to notify the secure partition. The secure partition
-reads the command data from the Internal CRB, proxies it to the External CRB, and writes
-the response back.
+The normal-world code performs MMIO writes to the CRB control registers (cmdReady, Start, goIdle) and then sends FF-A
+messages to notify the secure partition. The secure partition reads the command data from the Internal CRB, proxies it
+to the External CRB, and writes the response back.
 
 ### External CRB (`0x0c000000`)
 
-This is the QEMU-emulated TPM device MMIO region. It is **only accessible from the secure
-world** i.e. the TPM Service within the MSSP secure partition. On QEMU Arm Virt, this region
-presents a FIFO interface (**not CRB**), which the `TpmServiceStateTranslationLib` handles by
-detecting the interface type at initialization and using the appropriate FIFO
+This is the QEMU-emulated TPM device MMIO region. It is **only accessible from the secure world** i.e. the TPM Service
+within the MSSP secure partition. On QEMU Arm Virt, this region presents a FIFO interface (**not CRB**), which the
+`TpmServiceStateTranslationLib` handles by detecting the interface type at initialization and using the appropriate FIFO
 command/response protocol (burst-count reads, data register writes).
 
-The external CRB connects to the `swtpm` process through QEMU's chardev/tpmdev
-infrastructure:
+The external CRB connects to the `swtpm` process through QEMU's chardev/tpmdev infrastructure:
 
 ```text
 QEMU args: -chardev socket,id=chrtpm,path={BUILD_OUTPUT_BASE}/swtpm-sock
@@ -275,8 +267,8 @@ QEMU args: -chardev socket,id=chrtpm,path={BUILD_OUTPUT_BASE}/swtpm-sock
 
 ## FF-A Communication Protocol
 
-All TPM commands from normal world to secure world use FF-A Direct Request/Response
-messaging (FFA_MSG_SEND_DIRECT_REQ2 / FFA_MSG_SEND_DIRECT_RESP2) to/from the TPM Service.
+All TPM commands from normal world to secure world use FF-A Direct Request/Response messaging (FFA_MSG_SEND_DIRECT_REQ2
+/ FFA_MSG_SEND_DIRECT_RESP2) to/from the TPM Service.
 
 ### Service Discovery
 
@@ -286,48 +278,44 @@ On first use, `Tpm2DeviceLibFfa` discovers the TPM service partition:
 ArmFfaLibGetPartitionInfo(&gTpm2ServiceFfaGuid, &TpmPartInfo);
 ```
 
-This queries the SPMC (EL3) for the partition hosting UUID `17b862a4-1806-4faf-86b3-089a58353861`,
-which returns partition ID `0x8002`. This information can be found in the manifest of the secure
-partition.
+This queries the SPMC (EL3) for the partition hosting UUID `17b862a4-1806-4faf-86b3-089a58353861`, which returns
+partition ID `0x8002`. This information can be found in the manifest of the secure partition.
 
 ### Function IDs
 
-| ID | Name | Direction | Supported |
-| ---- | ------ | ----------- | ----------- |
-| `0x0f000001` | `TPM2_FFA_GET_INTERFACE_VERSION` | NW → SW | YES |
-| `0x0f000101` | `TPM2_FFA_GET_FEATURE_INFO` | NW → SW | NO |
-| `0x0f000201` | `TPM2_FFA_START` | NW → SW | YES |
-| `0x0f000301` | `TPM2_FFA_REGISTER_FOR_NOTIFICATION` | NW → SW | NO |
-| `0x0f000401` | `TPM2_FFA_UNREGISTER_FROM_NOTIFICATION` | NW → SW | NO |
-| `0x0f000501` | `TPM2_FFA_FINISH_NOTIFIED` | NW → SW | NO |
-| `0x1f000001` | `TPM2_FFA_MANAGE_LOCALITY` | TF-A → SW only | YES |
+| ID           | Name                                    | Direction      | Supported |
+| ------------ | --------------------------------------- | -------------- | --------- |
+| `0x0f000001` | `TPM2_FFA_GET_INTERFACE_VERSION`        | NW → SW        | YES       |
+| `0x0f000101` | `TPM2_FFA_GET_FEATURE_INFO`             | NW → SW        | NO        |
+| `0x0f000201` | `TPM2_FFA_START`                        | NW → SW        | YES       |
+| `0x0f000301` | `TPM2_FFA_REGISTER_FOR_NOTIFICATION`    | NW → SW        | NO        |
+| `0x0f000401` | `TPM2_FFA_UNREGISTER_FROM_NOTIFICATION` | NW → SW        | NO        |
+| `0x0f000501` | `TPM2_FFA_FINISH_NOTIFIED`              | NW → SW        | NO        |
+| `0x1f000001` | `TPM2_FFA_MANAGE_LOCALITY`              | TF-A → SW only | YES       |
 
 The `TPM2_FFA_START` function carries a qualifier in Arg1:
 
-| Qualifier | Value | Purpose |
-| ----------- | ------- | --------- |
-| `TPM2_FFA_START_FUNC_QUALIFIER_COMMAND` | `0x0` | Execute a CRB state transition (cmdReady, start, or goIdle) |
-| `TPM2_FFA_START_FUNC_QUALIFIER_LOCALITY` | `0x1` | Request or relinquish locality access |
+| Qualifier                                | Value | Purpose                                                     |
+| ---------------------------------------- | ----- | ----------------------------------------------------------- |
+| `TPM2_FFA_START_FUNC_QUALIFIER_COMMAND`  | `0x0` | Execute a CRB state transition (cmdReady, start, or goIdle) |
+| `TPM2_FFA_START_FUNC_QUALIFIER_LOCALITY` | `0x1` | Request or relinquish locality access                       |
 
 The `TPM2_FFA_MANAGE_LOCALITY` function carries a qualifier in Arg1:
 
-| Qualifier | Value | Purpose |
-| ----------- | ------- | --------- |
-| `TPM2_FFA_MANAGE_LOCALITY_OPEN` | `0x0` | Allows access to a locality |
+| Qualifier                        | Value | Purpose                       |
+| -------------------------------- | ----- | ----------------------------- |
+| `TPM2_FFA_MANAGE_LOCALITY_OPEN`  | `0x0` | Allows access to a locality   |
 | `TPM2_FFA_MANAGE_LOCALITY_CLOSE` | `0x1` | Prevents access to a locality |
 
-Note that for both `TPM2_FFA_START` and `TPM2_FFA_MANAGE_LOCALITY` Arg2 specifies
-the locality to take action upon.
+Note that for both `TPM2_FFA_START` and `TPM2_FFA_MANAGE_LOCALITY` Arg2 specifies the locality to take action upon.
 
 ### FF-A Message Sequence (Per TPM Command)
 
-A locality **must** first be requested before any commands can be sent to
-the TPM via that locality's CRB region. The active locality **must** be
-relinquished before another locality is requested. The entity currently
-engaging with the TPM is responsible for relinquishing the active locality
-when it is no longer in use. If the locality being requested is `CLOSED`, a
-DENIED error is returned. If the locality being relinquished is not the
-current active locality, a DENIED error is returned.
+A locality **must** first be requested before any commands can be sent to the TPM via that locality's CRB region. The
+active locality **must** be relinquished before another locality is requested. The entity currently engaging with the
+TPM is responsible for relinquishing the active locality when it is no longer in use. If the locality being requested is
+`CLOSED`, a DENIED error is returned. If the locality being relinquished is not the current active locality, a DENIED
+error is returned.
 
 A single TPM command requires multiple FF-A round trips:
 
@@ -365,12 +353,11 @@ sequenceDiagram
     end
 ```
 
-If the secure partition is preempted by a non-secure interrupt during processing, the FF-A
-call returns `EFI_INTERRUPT_PENDING`. The normal-world code handles this by calling
-`ArmFfaLibRun()` in a loop until the operation completes. Note that this can only happen if
-`ns-interrupts-action` in the secure partition's manifest is set to `0x02`, otherwise, the
-non-secure interrupt is queued and the service continues execution until it completes or
-responds with a YIELD.
+If the secure partition is preempted by a non-secure interrupt during processing, the FF-A call returns
+`EFI_INTERRUPT_PENDING`. The normal-world code handles this by calling `ArmFfaLibRun()` in a loop until the operation
+completes. Note that this can only happen if `ns-interrupts-action` in the secure partition's manifest is set to `0x02`,
+otherwise, the non-secure interrupt is queued and the service continues execution until it completes or responds with a
+YIELD.
 
 ## Hash Library Architecture
 
@@ -380,17 +367,17 @@ Tcg2Dxe uses `HashLibBaseCryptoRouterDxe` with all hash instance libraries inclu
 
 1. `HashLibBaseCryptoRouterConstructor` resets `PcdTcg2HashAlgorithmBitmap` to 0.
 2. Each `HashInstanceLib` constructor calls `RegisterHashInterfaceLib()`.
-3. `RegisterHashInterfaceLib()` checks the algorithm against `PcdTpm2HashMask` (`0x02` =
-   SHA256 only). Algorithms not in the mask return `EFI_UNSUPPORTED`.
+3. `RegisterHashInterfaceLib()` checks the algorithm against `PcdTpm2HashMask` (`0x02` = SHA256 only). Algorithms not in
+   the mask return `EFI_UNSUPPORTED`.
 
 ### Hash Algorithm Bitmask Values
 
 The bit positions used in `PcdTpm2HashMask`, `PcdTcg2HashAlgorithmBitmap`, and the
-`EFI_TCG2_BOOT_SERVICE_CAPABILITY.HashAlgorithmBitmap` field are defined by the EFI
-TCG2 protocol and the TCG algorithm registry:
+`EFI_TCG2_BOOT_SERVICE_CAPABILITY.HashAlgorithmBitmap` field are defined by the EFI TCG2 protocol and the TCG algorithm
+registry:
 
-- [UEFI TCG2 Protocol Specification][tcg2-proto] — see `EFI_TCG2_BOOT_HASH_ALG_*`
-  (`SHA1` = BIT0, `SHA256` = BIT1, `SHA384` = BIT2, `SHA512` = BIT3, `SM3_256` = BIT4).
+- [UEFI TCG2 Protocol Specification][tcg2-proto] — see `EFI_TCG2_BOOT_HASH_ALG_*` (`SHA1` = BIT0, `SHA256` = BIT1,
+  `SHA384` = BIT2, `SHA512` = BIT3, `SM3_256` = BIT4).
 - [TCG Algorithm Registry][tcg-algreg] — canonical list of TPM hash algorithm IDs.
 
 For this platform, `PcdTpm2HashMask = 0x02` enables SHA256 only.
@@ -420,23 +407,21 @@ Final ActivePcrBanks / HashAlgorithmBitmap in EFI_TCG2_BOOT_SERVICE_CAPABILITY
 
 ### Library Selection
 
-| `TPM2_ENABLE` | Library | Behavior |
-| --------------- | --------- | ---------- |
-| `FALSE` | `Tcg2PhysicalPresenceLibNull` | All functions stubbed |
-| `TRUE` | `DxeTcg2PhysicalPresenceMinimumLib` | Auto-confirms Clear; rejects all other operations |
+| `TPM2_ENABLE` | Library                             | Behavior                                          |
+| ------------- | ----------------------------------- | ------------------------------------------------- |
+| `FALSE`       | `Tcg2PhysicalPresenceLibNull`       | All functions stubbed                             |
+| `TRUE`        | `DxeTcg2PhysicalPresenceMinimumLib` | Auto-confirms Clear; rejects all other operations |
 
 The MinimumLib implementation:
 
 - **Auto-confirms** TPM Clear operations without user prompting.
-- **Rejects** SET_PCR_BANKS, LOG_ALL_DIGESTS, and other operations with
-  `TCG_PP_RETURN_TPM_OPERATION_RESPONSE_FAILURE`.
+- **Rejects** SET_PCR_BANKS, LOG_ALL_DIGESTS, and other operations with `TCG_PP_RETURN_TPM_OPERATION_RESPONSE_FAILURE`.
 - Does **not** create or use `TCG2_PHYSICAL_PRESENCE_FLAGS_VARIABLE`.
 
 ### ProcessRequest in BDS
 
-`Tcg2PhysicalPresenceLibProcessRequest()` is invoked from the platform's
-`DeviceBootManagerLib` during `DeviceBootManagerAfterConsole()`, before the shell
-launches. It:
+`Tcg2PhysicalPresenceLibProcessRequest()` is invoked from the platform's `DeviceBootManagerLib` during
+`DeviceBootManagerAfterConsole()`, before the shell launches. It:
 
 1. Reads the `Tcg2PhysicalPresence` NV variable (creates it if missing).
 2. Executes any pending PP request stored in the variable.
@@ -444,10 +429,9 @@ launches. It:
 
 ### Tcg2StandaloneMmArm (Secure World)
 
-The `Tcg2StandaloneMmArm` driver runs in the StMM partition (id=0x8001). It handles
-Physical Presence NV variable operations when called from the DXE-phase PP library via
-MM communicate. This is necessary because NV variable writes go through the secure
-variable store in StMM.
+The `Tcg2StandaloneMmArm` driver runs in the StMM partition (id=0x8001). It handles Physical Presence NV variable
+operations when called from the DXE-phase PP library via MM communicate. This is necessary because NV variable writes go
+through the secure variable store in StMM.
 
 ## ACPI Integration
 
@@ -455,21 +439,20 @@ variable store in StMM.
 
 Published by `Tcg2AcpiFfa.c`:
 
-| Field | Value |
-| ------- | ------- |
-| Start Method | CRB with FF-A (`0x0C`) |
-| Control Area Address | `PcdTpmBaseAddress + 0x40` |
-| Command Buffer | `PcdTpmBaseAddress + 0x80`, size `0xF80` |
-| Response Buffer | `PcdTpmBaseAddress + 0x80`, size `0xF80` |
-| Platform Parameters | Partition ID from `PcdTpmServiceFfaPartitionId` |
+| Field                | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| Start Method         | CRB with FF-A (`0x0C`)                          |
+| Control Area Address | `PcdTpmBaseAddress + 0x40`                      |
+| Command Buffer       | `PcdTpmBaseAddress + 0x80`, size `0xF80`        |
+| Response Buffer      | `PcdTpmBaseAddress + 0x80`, size `0xF80`        |
+| Platform Parameters  | Partition ID from `PcdTpmServiceFfaPartitionId` |
 
 ### TPM ACPI Device (SSDT)
 
 An SSDT is published with a `TPM0` device node containing:
 
 - `_HID` patched with the TPM manufacturer ID read from hardware.
-- `_CRS` with a QWordMemory resource pointing to `PcdTpmBaseAddress` through
-  `PcdTpmMaxAddress`.
+- `_CRS` with a QWordMemory resource pointing to `PcdTpmBaseAddress` through `PcdTpmMaxAddress`.
 - `_DSM` implementing TCG PPI operations 1–8 for OS-initiated Physical Presence requests.
 - An `FFixedHw` OperationRegion for FF-A DirectReq2 passthrough from the OS.
 
@@ -477,9 +460,8 @@ An SSDT is published with a `TPM0` device node containing:
 
 ### Installation
 
-swtpm requires Unix sockets, so it must run in a Linux environment. On Windows,
-use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows
-Subsystem for Linux).
+swtpm requires Unix sockets, so it must run in a Linux environment. On Windows, use
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) (Windows Subsystem for Linux).
 
 ```bash
 # Windows (from a WSL terminal)
@@ -508,9 +490,8 @@ swtpm socket \
 
 ### Automatic Setup (QemuRunner)
 
-When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` automatically starts swtpm as a subprocess before
-launching QEMU. The swtpm state directory is set to `BUILD_OUTPUT_BASE` and the Unix socket
-is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`:
+When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` automatically starts swtpm as a subprocess before launching QEMU. The swtpm
+state directory is set to `BUILD_OUTPUT_BASE` and the Unix socket is placed at `{BUILD_OUTPUT_BASE}/swtpm-sock`:
 
 ```python
 # Platforms/QemuArmVirtPkg/Plugins/QemuRunner/QemuRunner.py
@@ -527,10 +508,9 @@ def StartSwTpm(tpm_dir, tpm_sock):
     return subprocess.Popen(cmd)
 ```
 
-swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the
-Unix socket to appear before starting QEMU, and terminates the swtpm process so it doesn't
-outlive the run. SWTPM is enabled by default. Disable it by setting `SWTPM_ENABLE=FALSE` on
-the command line or in the BuildConfig.conf file.
+swtpm is started before QEMU launches. `QemuRunner` then waits (up to 30 seconds) for the Unix socket to appear before
+starting QEMU, and terminates the swtpm process so it doesn't outlive the run. SWTPM is enabled by default. Disable it
+by setting `SWTPM_ENABLE=FALSE` on the command line or in the BuildConfig.conf file.
 
 ```admonish note
 SWTPM is only available on Linux builds. `QemuRunner` automatically disables it on Windows
@@ -539,8 +519,8 @@ hosts even if `SWTPM_ENABLE=TRUE`.
 
 ### QEMU Arguments
 
-When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command line
-(with the socket path under `BUILD_OUTPUT_BASE`):
+When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command line (with the socket path under
+`BUILD_OUTPUT_BASE`):
 
 ```text
 -chardev socket,id=chrtpm,path={BUILD_OUTPUT_BASE}/swtpm-sock
@@ -548,9 +528,9 @@ When `SWTPM_ENABLE=TRUE`, `QemuRunner.py` adds the following to the QEMU command
 -device tpm-tis-device,tpmdev=tpm0
 ```
 
-The `-device tpm-tis-device` argument is Arm-specific. It attaches a sysbus TIS-compatible
-TPM device to the Arm Virt machine at the Internal CRB address `0x40200000`. This differs
-from Q35, which uses the ISA/PCI `tpm-tis` device instead (see [TPM on QEMU Q35](tpm_q35.md#qemu-arguments)).
+The `-device tpm-tis-device` argument is Arm-specific. It attaches a sysbus TIS-compatible TPM device to the Arm Virt
+machine at the Internal CRB address `0x40200000`. This differs from Q35, which uses the ISA/PCI `tpm-tis` device instead
+(see [TPM on QEMU Q35](tpm_q35.md#qemu-arguments)).
 
 ## Communication Flow
 
@@ -618,27 +598,27 @@ Response returned to caller
 
 ### Required PCDs (set when TPM2_ENABLE=TRUE)
 
-| PCD | Value | Type | Purpose |
-| ----- | ------- | ------ | --------- |
-| `PcdTpmBaseAddress` | `0x40200000` | FixedAtBuild | Internal CRB base address |
-| `PcdTpmMaxAddress` | `0x40204FFF` | FixedAtBuild | Internal CRB end address (5 localities) |
-| `PcdTpm2HashMask` | `0x02` | DynamicDefault | Hash algorithm filter (SHA256 only) |
-| `PcdTpmInstanceGuid` | `gEfiTpmDeviceInstanceTpm20DtpmGuid` | FixedAtBuild | Selects discrete TPM 2.0 device type |
-| `PcdTpm2AcpiTableRev` | `5` | DynamicHii | ACPI TPM2 table revision |
-| `PcdUserPhysicalPresence` | `FALSE` | FixedAtBuild | No physical user presence assertion |
+| PCD                       | Value                                | Type           | Purpose                                 |
+| ------------------------- | ------------------------------------ | -------------- | --------------------------------------- |
+| `PcdTpmBaseAddress`       | `0x40200000`                         | FixedAtBuild   | Internal CRB base address               |
+| `PcdTpmMaxAddress`        | `0x40204FFF`                         | FixedAtBuild   | Internal CRB end address (5 localities) |
+| `PcdTpm2HashMask`         | `0x02`                               | DynamicDefault | Hash algorithm filter (SHA256 only)     |
+| `PcdTpmInstanceGuid`      | `gEfiTpmDeviceInstanceTpm20DtpmGuid` | FixedAtBuild   | Selects discrete TPM 2.0 device type    |
+| `PcdTpm2AcpiTableRev`     | `5`                                  | DynamicHii     | ACPI TPM2 table revision                |
+| `PcdUserPhysicalPresence` | `FALSE`                              | FixedAtBuild   | No physical user presence assertion     |
 
 ### Memory Type PCDs
 
-| PCD | Value | Purpose |
-| ----- | ------- | --------- |
-| `PcdMemoryTypeEfiACPIReclaimMemory` | `0x143` | ACPI reclaim memory pages (includes TPM ACPI tables) |
-| `PcdMemoryTypeEfiACPIMemoryNVS` | `0x3C` | ACPI NVS pages (includes CRB region) |
-| `PcdMemoryTypeEfiRuntimeServicesData` | `0x642` | Runtime services data pages |
-| `PcdMemoryTypeEfiRuntimeServicesCode` | `0x424` | Runtime services code pages |
-| `PcdMemoryTypeEfiReservedMemoryType` | `0x505` | Reserved memory pages |
+| PCD                                   | Value   | Purpose                                              |
+| ------------------------------------- | ------- | ---------------------------------------------------- |
+| `PcdMemoryTypeEfiACPIReclaimMemory`   | `0x143` | ACPI reclaim memory pages (includes TPM ACPI tables) |
+| `PcdMemoryTypeEfiACPIMemoryNVS`       | `0x3C`  | ACPI NVS pages (includes CRB region)                 |
+| `PcdMemoryTypeEfiRuntimeServicesData` | `0x642` | Runtime services data pages                          |
+| `PcdMemoryTypeEfiRuntimeServicesCode` | `0x424` | Runtime services code pages                          |
+| `PcdMemoryTypeEfiReservedMemoryType`  | `0x505` | Reserved memory pages                                |
 
 ### Conditional PCDs (TPM2_CONFIG_ENABLE=TRUE)
 
-| PCD | Value | Purpose |
-| ----- | ------- | --------- |
+| PCD                                  | Value   | Purpose                                      |
+| ------------------------------------ | ------- | -------------------------------------------- |
 | `PcdTcgPhysicalPresenceInterfaceVer` | `"1.3"` | TCG PPI specification version reported to OS |

@@ -8,9 +8,9 @@
 - Has 64-bit for SEC and DXE phase, and no PEI phase.
 - Seeks to enable a tightly constrained virtual platform based on the QEMU ARM CPUs.
 
-By solely focusing on the ARM chipset, this package can be optimized such that it is allowed to break compatibility
-with other QEMU supported chipsets. The ARM chipset can be paired with an AARCH64 processor to enable a machine
-that can emulate ARM based hardware with industry standard features like TrustZone and PCI-E.
+By solely focusing on the ARM chipset, this package can be optimized such that it is allowed to break compatibility with
+other QEMU supported chipsets. The ARM chipset can be paired with an AARCH64 processor to enable a machine that can
+emulate ARM based hardware with industry standard features like TrustZone and PCI-E.
 
 ## QEMU ARM Virt Platform
 
@@ -22,8 +22,8 @@ corresponding trusted-firmware entities are more mature and feature-rich.
 
 ## Compiling and Running QEMU
 
-QemuArmVirtPkg uses the Project Mu repositories and Edk2 PyTools for its build operations.
-Specific details can be found here [Development/building.md](../building/building.md)
+QemuArmVirtPkg uses the Project Mu repositories and Edk2 PyTools for its build operations. Specific details can be found
+here [Development/building.md](../building/building.md)
 
 ## Firmware Features
 
@@ -32,27 +32,26 @@ hardware. Current QEMU ARM Virt platform supports the following features provide
 
 ### Mu Front Page
 
-Enable the Project Mu OEM sample "front page".
-This is a touch friendly, graphical, UEFI HII based UI application that
+Enable the Project Mu OEM sample "front page". This is a touch friendly, graphical, UEFI HII based UI application that
 allows basic platform and boot device configuration.
 
 [Details](../features/common/feature_frontpage.md)
 
 ### Device Firmware Configuration Interface
 
-The DFCI feature enables cloud management services (MDM services like Microsoft Intune) to manage some PC
-bios settings **securely**.  DFCI is a foundational feature that provides a shared identity and ownership
-model between the device firmware and the cloud.  Once a device is enrolled this shared identity can be used
-to securely communicate across untrusted mediums (network or usb).
+The DFCI feature enables cloud management services (MDM services like Microsoft Intune) to manage some PC bios settings
+**securely**. DFCI is a foundational feature that provides a shared identity and ownership model between the device
+firmware and the cloud. Once a device is enrolled this shared identity can be used to securely communicate across
+untrusted mediums (network or usb).
 
 [Details](../features/common/feature_dfci.md)
 
 ### Mu Telemetry / WHEA / HwErrorRecord
 
-The Mu Telemetry feature is an extension of the PI spec defined report status code.  The feature is
-designed to collect critical (platform defined) status codes, record them into a HwErrRecord,
-and then transfer them through the Microsoft WHEA pipeline.  From there an OEM can use Microsoft
-provided reports to check on in market device health.  *Some work still pending completion.
+The Mu Telemetry feature is an extension of the PI spec defined report status code. The feature is designed to collect
+critical (platform defined) status codes, record them into a HwErrRecord, and then transfer them through the Microsoft
+WHEA pipeline. From there an OEM can use Microsoft provided reports to check on in market device health. *Some work
+still pending completion.
 
 [Details](../features/common/feature_whea.md)
 
@@ -69,12 +68,12 @@ socket interface. Usage is covered in the detailed feature readme.
 
 ### Modules
 
-| Modules | Link to Documentation |
-| --- | --- |
+| Modules          | Link to Documentation                                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **QemuVideoDxe** | [QEMU Video Controller](https://github.com/microsoft/mu_tiano_platforms/blob/main/QemuPkg/QemuVideoDxe/ReadMe.md) |
 
 ### Libraries
 
-| Libraries | Link to Documentation |
-| --- | --- |
+| Libraries                | Link to Documentation                                                                                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **MsPlatformDevicesLib** | [MsPlatformDevicesLib](https://github.com/microsoft/mu_tiano_platforms/blob/main/Platforms/QemuArmVirtPkg/Library/MsPlatformDevicesLibQemuArmVirt/ReadMe.md) |
